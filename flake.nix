@@ -1,7 +1,7 @@
 {
   description = "A shell";
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs;
+    nixpkgs.url = "github:NixOS/nixpkgs";
   };
  
   outputs = { self, nixpkgs, ... } @ inputs:
@@ -16,8 +16,8 @@
           ## This can't be a flake input as it has multiple top-level folders
           ## See: https://github.com/NixOS/nix/issues/7083
           src = builtins.fetchurl {
-            url = https://dl.audiorelay.net/setups/linux/audiorelay-0.26.3.tar.gz;
-            sha256 = "05553s1gp9bimr79nvagdk0l8ahmbwkqg6i6csavvzw40kisj49r";
+            url = "https://dl.audiorelay.net/setups/linux/audiorelay-0.27.5.tar.gz";
+            sha256 = "1iz8z3nz8jxdp57ksy466a1gwk5w3vibd9w1g2zyf8dxlhwl31f4";
           };
           sourceRoot = ".";
 
@@ -47,7 +47,7 @@
           ];
 
           buildInputs = with pkgs; [
-            alsaLib
+            alsa-lib
             file
             fontconfig.lib
             freetype
@@ -62,9 +62,12 @@
             xorg.libXrandr
             xorg.libXinerama
             zlib
+            openjdk
           ];
 
           dontAutoPatchelf = true;
+
+          autoPatchelfIgnoreMissingDeps = [ "libjava.so" "libjli.so" "libjvm.so" "libverify.so" "libnet.so" "libnio.so" "libawt.so" "libawt_xawt.so" ];
 
           postFixup = ''
             autoPatchelf \
@@ -74,7 +77,7 @@
               $(find "$out/lib/runtime/lib" -type f -name 'lib*.so' -a -not -name 'libj*.so')
             wrapProgram $out/bin/AudioRelay \
               --prefix LD_LIBRARY_PATH : $out/lib/runtime/lib/ \
-              --prefix LD_LIBRARY_PATH : ${pkgs.alsaLib}/lib/ \
+              --prefix LD_LIBRARY_PATH : ${pkgs.alsa-lib}/lib/ \
               --prefix LD_LIBRARY_PATH : ${pkgs.fontconfig.lib}/lib/ \
               --prefix LD_LIBRARY_PATH : ${pkgs.freetype}/lib/ \
               --prefix LD_LIBRARY_PATH : ${pkgs.libglvnd}/lib/ \
@@ -85,7 +88,8 @@
               --prefix LD_LIBRARY_PATH : ${pkgs.xorg.libXi}/lib/ \
               --prefix LD_LIBRARY_PATH : ${pkgs.xorg.libXrender}/lib/ \
               --prefix LD_LIBRARY_PATH : ${pkgs.xorg.libXtst}/lib/ \
-              --prefix LD_LIBRARY_PATH : ${pkgs.zlib}/lib/
+              --prefix LD_LIBRARY_PATH : ${pkgs.zlib}/lib/ \
+              --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath buildInputs}
           '';
 
           meta = with pkgs.lib; {
